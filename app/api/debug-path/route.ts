@@ -84,7 +84,7 @@ export async function POST(_request: NextRequest) {
     const dynamicImport = new Function("module", "return import(module)") as (
       module: string,
     ) => Promise<SqliteVecModule>;
-    let sqliteVec: SqliteVecModule;
+    let sqliteVec: SqliteVecModule | undefined;
 
     try {
       sqliteVec = await dynamicImport("sqlite-vec-darwin-arm64");
@@ -95,16 +95,34 @@ export async function POST(_request: NextRequest) {
         "   - sqlite-vec-darwin-arm64 failed:",
         e instanceof Error ? e.message : String(e),
       );
-      sqliteVec = await import("sqlite-vec");
-      console.log("   ✅ sqlite-vec imported successfully");
-      debugResults.importedModule = "sqlite-vec";
+      try {
+        sqliteVec = await import("sqlite-vec");
+        console.log("   ✅ sqlite-vec imported successfully");
+        debugResults.importedModule = "sqlite-vec";
+      } catch (e2) {
+        console.log(
+          "   - sqlite-vec also failed:",
+          e2 instanceof Error ? e2.message : String(e2),
+        );
+      }
     }
 
-    console.log("   - Available methods:", Object.keys(sqliteVec));
+    if (!sqliteVec) {
+      return NextResponse.json({
+        success: false,
+        error: "Failed to import sqlite-vec module",
+        debugResults,
+      });
+    }
+
+    // Reassign to const to help TypeScript narrow the type
+    const vec = sqliteVec;
+
+    console.log("   - Available methods:", Object.keys(vec));
     debugResults.availableMethods = Object.keys(sqliteVec);
 
-    if (typeof sqliteVec.getLoadablePath === "function") {
-      const extensionPath = sqliteVec.getLoadablePath();
+    if (typeof vec.getLoadablePath === "function") {
+      const extensionPath = vec.getLoadablePath();
       console.log("   - getLoadablePath() returns:", extensionPath);
       debugResults.extensionPath = extensionPath;
 
@@ -175,10 +193,15 @@ export async function POST(_request: NextRequest) {
 
     // Approach 1: Direct load
     try {
-      console.log("   - Testing sqliteVec.load(db)...");
-      sqliteVec.load(db);
-      console.log("   ✅ Direct load successful");
-      debugResults.directLoadSuccess = true;
+      console.log("   - Testing vec.load(db)...");
+      if (typeof vec.load === "function") {
+        vec.load(db);
+        console.log("   ✅ Direct load successful");
+        debugResults.directLoadSuccess = true;
+      } else {
+        console.log("   ❌ vec.load is not a function");
+        debugResults.directLoadSuccess = false;
+      }
 
       // Test if vec0 is available
       try {
@@ -204,10 +227,10 @@ export async function POST(_request: NextRequest) {
       };
 
       // Approach 2: Manual loadExtension
-      if (typeof sqliteVec.getLoadablePath === "function") {
+      if (typeof vec.getLoadablePath === "function") {
         try {
           console.log("   - Testing db.loadExtension(path)...");
-          const extensionPath = sqliteVec.getLoadablePath();
+          const extensionPath = vec.getLoadablePath();
           db.loadExtension(extensionPath);
           console.log("   ✅ Manual loadExtension successful");
           debugResults.manualLoadSuccess = true;

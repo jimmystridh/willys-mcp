@@ -129,7 +129,8 @@ export async function POST(request: NextRequest) {
             ...r,
             frequency: frequencyMap.get(r.productCode) || 0,
             boostedScore:
-              r.similarity * 100 + (frequencyMap.get(r.productCode) || 0) * 2,
+              (r.similarity ?? 0) * 100 +
+              (frequencyMap.get(r.productCode) || 0) * 2,
           }))
           .sort((a, b) => b.boostedScore - a.boostedScore)
           .slice(0, maxResults);
