@@ -3,7 +3,7 @@
  * Uses OpenAI's text-embedding-3-small model for generating embeddings
  */
 
-import OpenAI from 'openai';
+import OpenAI from "openai";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -19,35 +19,40 @@ const embeddingCache = new Map<string, Float32Array>();
  */
 export async function generateEmbedding(text: string): Promise<Float32Array> {
   if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY environment variable is not set');
+    throw new Error("OPENAI_API_KEY environment variable is not set");
   }
 
   // Normalize text for consistent embeddings
-  const normalizedText = text.trim().toLowerCase().replace(/[\n\r\t]/g, ' ').replace(/\s+/g, ' ');
-  
+  const normalizedText = text
+    .trim()
+    .toLowerCase()
+    .replace(/[\n\r\t]/g, " ")
+    .replace(/\s+/g, " ");
+
   // Check cache first
-  if (embeddingCache.has(normalizedText)) {
+  const cachedEmbedding = embeddingCache.get(normalizedText);
+  if (cachedEmbedding !== undefined) {
     console.log(`Embedding cache hit for: "${normalizedText}"`);
-    return embeddingCache.get(normalizedText)!;
+    return cachedEmbedding;
   }
 
   console.log(`Generating embedding for: "${normalizedText}"`);
 
   try {
     const response = await openai.embeddings.create({
-      model: 'text-embedding-3-small',
+      model: "text-embedding-3-small",
       input: normalizedText,
-      encoding_format: 'float',
+      encoding_format: "float",
     });
 
     const embedding = new Float32Array(response.data[0].embedding);
-    
+
     // Cache the result
     embeddingCache.set(normalizedText, embedding);
-    
+
     return embedding;
   } catch (error) {
-    console.error('Error generating embedding:', error);
+    console.error("Error generating embedding:", error);
     throw error;
   }
 }
@@ -58,14 +63,21 @@ export async function generateEmbedding(text: string): Promise<Float32Array> {
  * @param batchSize - Number of texts to process per API call (max 100)
  * @returns Array of Float32Array vectors
  */
-export async function generateEmbeddingsBatch(texts: string[], batchSize: number = 50): Promise<Float32Array[]> {
+export async function generateEmbeddingsBatch(
+  texts: string[],
+  batchSize: number = 50,
+): Promise<Float32Array[]> {
   if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY environment variable is not set');
+    throw new Error("OPENAI_API_KEY environment variable is not set");
   }
 
   const results: Float32Array[] = [];
-  const normalizedTexts = texts.map(text => 
-    text.trim().toLowerCase().replace(/[\n\r\t]/g, ' ').replace(/\s+/g, ' ')
+  const normalizedTexts = texts.map((text) =>
+    text
+      .trim()
+      .toLowerCase()
+      .replace(/[\n\r\t]/g, " ")
+      .replace(/\s+/g, " "),
   );
 
   // Process in batches to respect API limits and cache hits
@@ -73,15 +85,16 @@ export async function generateEmbeddingsBatch(texts: string[], batchSize: number
     const batch = normalizedTexts.slice(i, i + batchSize);
     const batchTexts: string[] = [];
     const batchIndices: number[] = [];
-    
+
     // Check cache for each item in batch
     const batchResults: Float32Array[] = new Array(batch.length);
-    
+
     for (let j = 0; j < batch.length; j++) {
       const text = batch[j];
-      if (embeddingCache.has(text)) {
+      const cachedEmbedding = embeddingCache.get(text);
+      if (cachedEmbedding !== undefined) {
         console.log(`Batch cache hit for: "${text}"`);
-        batchResults[j] = embeddingCache.get(text)!;
+        batchResults[j] = cachedEmbedding;
       } else {
         batchTexts.push(text);
         batchIndices.push(j);
@@ -91,12 +104,12 @@ export async function generateEmbeddingsBatch(texts: string[], batchSize: number
     // Generate embeddings for non-cached items
     if (batchTexts.length > 0) {
       console.log(`Generating batch embeddings for ${batchTexts.length} texts`);
-      
+
       try {
         const response = await openai.embeddings.create({
-          model: 'text-embedding-3-small',
+          model: "text-embedding-3-small",
           input: batchTexts,
-          encoding_format: 'float',
+          encoding_format: "float",
         });
 
         // Process batch response
@@ -104,21 +117,21 @@ export async function generateEmbeddingsBatch(texts: string[], batchSize: number
           const embedding = new Float32Array(response.data[k].embedding);
           const originalIndex = batchIndices[k];
           const text = batchTexts[k];
-          
+
           batchResults[originalIndex] = embedding;
           embeddingCache.set(text, embedding);
         }
       } catch (error) {
-        console.error('Error generating batch embeddings:', error);
+        console.error("Error generating batch embeddings:", error);
         throw error;
       }
     }
 
     results.push(...batchResults);
-    
+
     // Rate limiting: wait between batches
     if (i + batchSize < normalizedTexts.length) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
 
@@ -149,9 +162,12 @@ export function blobToEmbedding(blob: Buffer): Float32Array {
  * @param embedding2 - Second embedding vector
  * @returns Cosine similarity score (0-1, where 1 is most similar)
  */
-export function cosineSimilarity(embedding1: Float32Array, embedding2: Float32Array): number {
+export function cosineSimilarity(
+  embedding1: Float32Array,
+  embedding2: Float32Array,
+): number {
   if (embedding1.length !== embedding2.length) {
-    throw new Error('Embeddings must have the same dimensions');
+    throw new Error("Embeddings must have the same dimensions");
   }
 
   let dotProduct = 0;
@@ -173,7 +189,7 @@ export function cosineSimilarity(embedding1: Float32Array, embedding2: Float32Ar
  */
 export function clearEmbeddingCache(): void {
   embeddingCache.clear();
-  console.log('Embedding cache cleared');
+  console.log("Embedding cache cleared");
 }
 
 /**
@@ -182,6 +198,6 @@ export function clearEmbeddingCache(): void {
 export function getEmbeddingCacheStats(): { size: number; keys: string[] } {
   return {
     size: embeddingCache.size,
-    keys: Array.from(embeddingCache.keys())
+    keys: Array.from(embeddingCache.keys()),
   };
 }

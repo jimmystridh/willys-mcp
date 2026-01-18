@@ -45,7 +45,7 @@ export default function ChecklistItem({
       } else {
         alert(`Failed to add to cart: ${result.message}`);
       }
-    } catch (error) {
+    } catch (_error) {
       alert("Error adding to cart");
     } finally {
       setIsAdding(false);
@@ -95,6 +95,7 @@ export default function ChecklistItem({
               </span>
               {item.productCode && (
                 <button
+                  type="button"
                   onClick={handleAddToCart}
                   disabled={isAdding}
                   className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"

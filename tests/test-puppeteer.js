@@ -1,4 +1,4 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require("puppeteer");
 
 async function testPuppeteerLogin() {
   const username = "198202242973";
@@ -25,8 +25,8 @@ async function testPuppeteerLogin() {
 
     // Clear any existing cookies/session to ensure we get the actual login page
     console.log("Clearing cookies and cache to ensure fresh session...");
-    await page.deleteCookie(...await page.cookies());
-    
+    await page.deleteCookie(...(await page.cookies()));
+
     // Set a realistic user agent
     await page.setUserAgent(
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
@@ -43,34 +43,36 @@ async function testPuppeteerLogin() {
     const pageTitle = await page.title();
     console.log(`Current URL after navigation: ${currentUrl}`);
     console.log(`Page title: ${pageTitle}`);
-    
+
     // Check if we're on the home page (might be logged in already)
     const pageContent = await page.content();
-    if (pageContent.includes('Sök i e-handeln')) {
+    if (pageContent.includes("Sök i e-handeln")) {
       console.log("⚠️ We seem to be on the main shopping page, not login page!");
-      console.log("Trying to find login button or link to navigate to actual login form...");
-      
+      console.log(
+        "Trying to find login button or link to navigate to actual login form...",
+      );
+
       // Try to find login button/link
       const loginSelectors = [
         'a[href*="inloggning"]',
         'button:contains("Logga in")',
         'a:contains("Logga in")',
         '[data-testid*="login"]',
-        '.login',
-        '#login',
-        'a[href*="login"]'
+        ".login",
+        "#login",
+        'a[href*="login"]',
       ];
-      
+
       for (const selector of loginSelectors) {
         try {
           const loginElement = await page.$(selector);
           if (loginElement) {
             console.log(`Found login element with selector: ${selector}`);
             await loginElement.click();
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await new Promise((resolve) => setTimeout(resolve, 2000));
             break;
           }
-        } catch (e) {
+        } catch (_e) {
           // Continue to next selector
         }
       }
@@ -81,7 +83,7 @@ async function testPuppeteerLogin() {
     try {
       // Wait a bit for the cookie banner to load
       await new Promise((resolve) => setTimeout(resolve, 3000));
-      
+
       // Try multiple common cookie banner selectors
       const cookieSelectors = [
         'button[id*="accept"]',
@@ -93,31 +95,35 @@ async function testPuppeteerLogin() {
         'button:contains("Godkänn")',
         '[data-testid*="accept"]',
         '[data-cy*="accept"]',
-        '.cookie-banner button',
-        '#cookie-banner button',
+        ".cookie-banner button",
+        "#cookie-banner button",
         '[role="dialog"] button',
-        '.modal button:first-child'
+        ".modal button:first-child",
       ];
-      
+
       for (const selector of cookieSelectors) {
         try {
           const button = await page.$(selector);
           if (button) {
-            console.log(`Found cookie banner button with selector: ${selector}`);
+            console.log(
+              `Found cookie banner button with selector: ${selector}`,
+            );
             await button.click();
             await new Promise((resolve) => setTimeout(resolve, 1000));
             break;
           }
-        } catch (selectorError) {
+        } catch (_selectorError) {
           // Continue to next selector
         }
       }
-      
+
       // Don't press Escape as it might close the login modal
       console.log("Cookie banner handling completed.");
-      
     } catch (error) {
-      console.log("Cookie banner handling completed with potential issues:", error);
+      console.log(
+        "Cookie banner handling completed with potential issues:",
+        error,
+      );
     }
 
     console.log("Looking for login form inputs...");
@@ -128,26 +134,46 @@ async function testPuppeteerLogin() {
     // Wait for the specific login form to be present
     console.log("Waiting for login form to fully load...");
     try {
-      await page.waitForSelector('form, input[type="text"], input[type="password"]', { 
-        timeout: 10000 
-      });
-    } catch (e) {
+      await page.waitForSelector(
+        'form, input[type="text"], input[type="password"]',
+        {
+          timeout: 10000,
+        },
+      );
+    } catch (_e) {
       console.log("Timeout waiting for form elements, continuing anyway...");
     }
 
     // DEBUG: Log all input fields on the page
     console.log("=== DEBUGGING ALL INPUT FIELDS ===");
-    const allInputs = await page.$$('input');
+    const allInputs = await page.$$("input");
     console.log(`Found ${allInputs.length} input fields on page`);
-    
+
     for (let i = 0; i < allInputs.length; i++) {
       const input = allInputs[i];
-      const type = await input.getProperty('type').then(p => p.jsonValue()).catch(() => null);
-      const name = await input.getProperty('name').then(p => p.jsonValue()).catch(() => null);
-      const id = await input.getProperty('id').then(p => p.jsonValue()).catch(() => null);
-      const className = await input.getProperty('className').then(p => p.jsonValue()).catch(() => null);
-      const placeholder = await input.getProperty('placeholder').then(p => p.jsonValue()).catch(() => null);
-      console.log(`Input ${i + 1}: type="${type}", name="${name}", id="${id}", class="${className}", placeholder="${placeholder}"`);
+      const type = await input
+        .getProperty("type")
+        .then((p) => p.jsonValue())
+        .catch(() => null);
+      const name = await input
+        .getProperty("name")
+        .then((p) => p.jsonValue())
+        .catch(() => null);
+      const id = await input
+        .getProperty("id")
+        .then((p) => p.jsonValue())
+        .catch(() => null);
+      const className = await input
+        .getProperty("className")
+        .then((p) => p.jsonValue())
+        .catch(() => null);
+      const placeholder = await input
+        .getProperty("placeholder")
+        .then((p) => p.jsonValue())
+        .catch(() => null);
+      console.log(
+        `Input ${i + 1}: type="${type}", name="${name}", id="${id}", class="${className}", placeholder="${placeholder}"`,
+      );
     }
     console.log("=== END DEBUG ===");
 
@@ -157,47 +183,57 @@ async function testPuppeteerLogin() {
     // Try to find BOTH inputs together with a more patient approach
     for (let attempt = 0; attempt < 3; attempt++) {
       console.log(`Attempt ${attempt + 1} to find login inputs...`);
-      
+
       // First try the known working selectors
-      usernameInput = await page.$('input[name="j_username"]') || 
-                     await page.$('input[type="text"]') ||
-                     await page.$('input[name="username"]');
-      
-      passwordInput = await page.$('input[name="j_password"]') || 
-                     await page.$('input[type="password"]') ||
-                     await page.$('input[name="password"]');
+      usernameInput =
+        (await page.$('input[name="j_username"]')) ||
+        (await page.$('input[type="text"]')) ||
+        (await page.$('input[name="username"]'));
+
+      passwordInput =
+        (await page.$('input[name="j_password"]')) ||
+        (await page.$('input[type="password"]')) ||
+        (await page.$('input[name="password"]'));
 
       if (usernameInput && passwordInput) {
         console.log("Found both username and password inputs!");
         break;
       }
 
-      console.log(`Found username: ${!!usernameInput}, password: ${!!passwordInput}`);
-      
+      console.log(
+        `Found username: ${!!usernameInput}, password: ${!!passwordInput}`,
+      );
+
       // Wait between attempts and try interacting with page to trigger any dynamic loading
       if (attempt < 2) {
         await new Promise((resolve) => setTimeout(resolve, 3000));
         // Try scrolling or clicking to trigger any lazy loading
-        await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+        await page.evaluate(() =>
+          window.scrollTo(0, document.body.scrollHeight),
+        );
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
 
     if (!usernameInput) {
-      throw new Error("Username input field not found on login page after all attempts");
+      throw new Error(
+        "Username input field not found on login page after all attempts",
+      );
     }
 
     if (!passwordInput) {
-      throw new Error("Password input field not found on login page - see debug info above");
+      throw new Error(
+        "Password input field not found on login page - see debug info above",
+      );
     }
 
     console.log("Filling in credentials...");
     await usernameInput.type(username);
     await passwordInput.type(password);
-    
+
     // Verify the credentials were typed correctly
-    const typedUsername = await usernameInput.evaluate(el => el.value);
-    const typedPassword = await passwordInput.evaluate(el => el.value);
+    const typedUsername = await usernameInput.evaluate((el) => el.value);
+    const typedPassword = await passwordInput.evaluate((el) => el.value);
     console.log(`Typed username: "${typedUsername}" (expected: "${username}")`);
     console.log(`Typed password: "${typedPassword}" (expected: "${password}")`);
 
@@ -205,34 +241,38 @@ async function testPuppeteerLogin() {
 
     // Find the login button by searching for "Logga in" text
     let loginButton = null;
-    
+
     console.log("Searching for 'Logga in' button...");
-    
+
     // Use XPath to find button by text content
     try {
-      const xpathButtons = await page.$x("//button[contains(text(), 'Logga in')]");
+      const xpathButtons = await page.$x(
+        "//button[contains(text(), 'Logga in')]",
+      );
       if (xpathButtons.length > 0) {
         loginButton = xpathButtons[0];
-        console.log(`Found login button via XPath (found ${xpathButtons.length} matches)`);
+        console.log(
+          `Found login button via XPath (found ${xpathButtons.length} matches)`,
+        );
       }
     } catch (e) {
       console.log("XPath search failed:", e.message);
     }
-    
+
     // Fallback: manual search through all buttons
     if (!loginButton) {
       console.log("XPath failed, manually searching all buttons...");
-      const buttons = await page.$$('button');
+      const buttons = await page.$$("button");
       console.log(`Found ${buttons.length} total buttons on page`);
-      
+
       for (let i = 0; i < buttons.length; i++) {
         try {
           const btn = buttons[i];
-          const text = await btn.evaluate(el => el.textContent?.trim());
-          const visible = await btn.evaluate(el => el.offsetParent !== null);
+          const text = await btn.evaluate((el) => el.textContent?.trim());
+          const visible = await btn.evaluate((el) => el.offsetParent !== null);
           console.log(`Button ${i + 1}: "${text}" (visible: ${visible})`);
-          
-          if (text && text.includes('Logga in') && visible) {
+
+          if (text?.includes("Logga in") && visible) {
             loginButton = btn;
             console.log(`✅ Found login button: "${text}"`);
             break;
@@ -242,115 +282,129 @@ async function testPuppeteerLogin() {
         }
       }
     }
-    
+
     if (loginButton) {
       console.log("Clicking login button...");
-      
+
       // Make sure the button is visible and enabled before clicking
-      const buttonState = await loginButton.evaluate(el => ({
+      const buttonState = await loginButton.evaluate((el) => ({
         visible: el.offsetParent !== null,
         disabled: el.disabled,
-        ariaDisabled: el.getAttribute('aria-disabled'),
-        text: el.textContent?.trim()
+        ariaDisabled: el.getAttribute("aria-disabled"),
+        text: el.textContent?.trim(),
       }));
       console.log("Button state:", buttonState);
-      
+
       // Try clicking the button and verify it works
       try {
         console.log("Attempting to click login button...");
-        
+
         // Scroll button into view first
         await loginButton.scrollIntoView();
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
         // Try different click approaches
         console.log("Method 1: Normal Puppeteer click...");
         await loginButton.click();
         console.log("✅ Normal click completed");
-        
+
         // Wait and check if it worked
-        await new Promise(resolve => setTimeout(resolve, 500));
-        let stillVisible = await loginButton.evaluate(el => {
-          return el.offsetParent !== null && el.isConnected;
-        }).catch(() => false);
-        
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        let stillVisible = await loginButton
+          .evaluate((el) => {
+            return el.offsetParent !== null && el.isConnected;
+          })
+          .catch(() => false);
+
         if (stillVisible) {
           console.log("Normal click didn't work, trying JavaScript click...");
-          await loginButton.evaluate(el => el.click());
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          stillVisible = await loginButton.evaluate(el => {
-            return el.offsetParent !== null && el.isConnected;
-          }).catch(() => false);
+          await loginButton.evaluate((el) => el.click());
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          stillVisible = await loginButton
+            .evaluate((el) => {
+              return el.offsetParent !== null && el.isConnected;
+            })
+            .catch(() => false);
         }
-        
+
         if (stillVisible) {
-          console.log("JavaScript click didn't work, trying mouse click with coordinates...");
+          console.log(
+            "JavaScript click didn't work, trying mouse click with coordinates...",
+          );
           const box = await loginButton.boundingBox();
           if (box) {
-            await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await page.mouse.click(
+              box.x + box.width / 2,
+              box.y + box.height / 2,
+            );
+            await new Promise((resolve) => setTimeout(resolve, 500));
           }
         }
-        
+
         // Wait a moment for the click to process
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
         // Check if the button is still visible (it should disappear if login works)
-        const finalVisibility = await loginButton.evaluate(el => {
-          return el.offsetParent !== null && el.isConnected;
-        }).catch(() => false);
-        
+        const finalVisibility = await loginButton
+          .evaluate((el) => {
+            return el.offsetParent !== null && el.isConnected;
+          })
+          .catch(() => false);
+
         console.log(`Button still visible after click: ${finalVisibility}`);
-        
+
         if (!finalVisibility) {
           console.log("🎉 Login button disappeared - login likely successful!");
         } else {
           console.log("⚠️ Login button still visible - login may have failed");
         }
-        
       } catch (e) {
         console.log("❌ Click failed:", e.message);
       }
-      
+
       // Wait a bit more for any changes
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       // Check for any error messages in the modal
-      const errorElements = await page.$$('.error, [class*="error"], [class*="Error"], .invalid, [class*="invalid"]');
+      const errorElements = await page.$$(
+        '.error, [class*="error"], [class*="Error"], .invalid, [class*="invalid"]',
+      );
       for (const errorEl of errorElements) {
         try {
-          const errorText = await errorEl.evaluate(el => el.textContent?.trim());
+          const errorText = await errorEl.evaluate((el) =>
+            el.textContent?.trim(),
+          );
           if (errorText) {
             console.log(`⚠️ Found potential error message: "${errorText}"`);
           }
-        } catch (e) {
+        } catch (_e) {
           // Continue
         }
       }
-      
     } else {
       console.log("❌ No login button found! Trying Enter key as fallback...");
       await passwordInput.focus();
-      await page.keyboard.press('Enter');
+      await page.keyboard.press("Enter");
     }
 
     // Wait for login to process and modal to close
     console.log("Waiting for login to complete...");
-    
+
     // Wait for either navigation or modal to disappear
     try {
       // Wait for modal to close (login inputs should disappear)
       await page.waitForFunction(
-        () => !document.querySelector('input[name="j_username"]') || 
-              !document.querySelector('input[name="j_password"]'),
-        { timeout: 10000 }
+        () =>
+          !document.querySelector('input[name="j_username"]') ||
+          !document.querySelector('input[name="j_password"]'),
+        { timeout: 10000 },
       );
       console.log("Login modal closed - login appears successful!");
-    } catch (e) {
+    } catch (_e) {
       console.log("Modal didn't close within timeout, continuing anyway...");
     }
-    
+
     // Additional wait for any redirects/updates
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -374,7 +428,7 @@ async function testPuppeteerLogin() {
 
     if (!response || response.status() !== 200) {
       throw new Error(
-        `Orders API returned status: ${response?.status() || "unknown"}`
+        `Orders API returned status: ${response?.status() || "unknown"}`,
       );
     }
 

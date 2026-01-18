@@ -25,7 +25,7 @@ export async function authenticateWithWillys(
     // Store all the session cookies as a single JSON string
     // This way we can retrieve and use them for external API calls
     const cookieJson = JSON.stringify(sessionCookies);
-    
+
     cookieStore.set("willys-session-cookies", cookieJson, {
       httpOnly: true,
       secure: false,
@@ -87,8 +87,11 @@ export async function getWillysCookies(): Promise<string> {
       .join("; ");
 
     console.log("Cookie string length:", cookieString.length);
-    console.log("Cookie string preview:", cookieString.substring(0, 100) + "...");
-    
+    console.log(
+      "Cookie string preview:",
+      `${cookieString.substring(0, 100)}...`,
+    );
+
     return cookieString;
   } catch (error) {
     console.error("Error parsing session cookies JSON:", error);

@@ -3,9 +3,9 @@
  * Provides persistent, reliable session management with order cache integration
  */
 
-import { randomUUID } from 'crypto';
-import { willysDatabase } from './database';
-import { orderCache } from './mcp-order-cache';
+import { randomUUID } from "node:crypto";
+import { willysDatabase } from "./database";
+import { orderCache } from "./mcp-order-cache";
 
 interface Session {
   cookies: string;
@@ -38,7 +38,7 @@ class McpSessionStore {
       return {
         cookies: session.cookies,
         authenticated: session.authenticated,
-        timestamp: Date.now() // For backward compatibility
+        timestamp: Date.now(), // For backward compatibility
       };
     } catch (error) {
       console.error(`Error getting session ${sessionId}:`, error);
@@ -50,10 +50,10 @@ class McpSessionStore {
     try {
       // Clear associated order cache first
       orderCache.clearBySession(sessionId);
-      
+
       // Clear the session (this will also cascade delete order cache entries)
       willysDatabase.clearSession(sessionId);
-      
+
       console.log(`Session ${sessionId} cleared from database`);
     } catch (error) {
       console.error(`Error clearing session ${sessionId}:`, error);
@@ -64,7 +64,7 @@ class McpSessionStore {
     try {
       willysDatabase.cleanup();
     } catch (error) {
-      console.error('Error during session cleanup:', error);
+      console.error("Error during session cleanup:", error);
     }
   }
 
@@ -76,7 +76,7 @@ class McpSessionStore {
       const stats = await willysDatabase.getStats();
       return { sessions: stats.sessions, cachedOrders: stats.cachedOrders };
     } catch (error) {
-      console.error('Error getting session store stats:', error);
+      console.error("Error getting session store stats:", error);
       return { sessions: 0, cachedOrders: 0 };
     }
   }

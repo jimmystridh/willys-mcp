@@ -1,12 +1,14 @@
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 
 // NewRelic tracking constants
 const NEWRELIC_ACCOUNT_ID = "1154196";
 const NEWRELIC_APP_ID = "772324203";
 
 // Common headers
-const USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36";
-const SEC_CH_UA = '"Not;A=Brand";v="99", "Google Chrome";v="139", "Chromium";v="139"';
+const USER_AGENT =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36";
+const SEC_CH_UA =
+  '"Not;A=Brand";v="99", "Google Chrome";v="139", "Chromium";v="139"';
 
 // Default fetch configuration
 const DEFAULT_TIMEOUT_MS = 30000;
@@ -23,7 +25,7 @@ export interface CsrfTokenResponse {
   token?: string;
 }
 
-export interface FetchWithRetryOptions extends Omit<RequestInit, 'signal'> {
+export interface FetchWithRetryOptions extends Omit<RequestInit, "signal"> {
   timeout?: number;
   maxRetries?: number;
   baseDelayMs?: number;
@@ -51,11 +53,11 @@ class FetchRetryExhaustedError extends Error {
 export { FetchTimeoutError, FetchRetryExhaustedError };
 
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function calculateBackoffDelay(attempt: number, baseDelayMs: number): number {
-  const exponentialDelay = baseDelayMs * Math.pow(2, attempt);
+  const exponentialDelay = baseDelayMs * 2 ** attempt;
   const jitter = exponentialDelay * (0.5 + Math.random() * 0.5);
   return Math.min(jitter, 30000);
 }
@@ -80,7 +82,7 @@ function isRetryableStatus(status: number): boolean {
  */
 export async function fetchWithRetry(
   url: string,
-  options: FetchWithRetryOptions = {}
+  options: FetchWithRetryOptions = {},
 ): Promise<Response> {
   const {
     timeout = DEFAULT_TIMEOUT_MS,
@@ -103,7 +105,11 @@ export async function fetchWithRetry(
       clearTimeout(timeoutId);
 
       // Don't retry on client errors (except 429 rate limit)
-      if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+      if (
+        response.status >= 400 &&
+        response.status < 500 &&
+        response.status !== 429
+      ) {
         return response;
       }
 
@@ -118,7 +124,9 @@ export async function fetchWithRetry(
 
         if (attempt < maxRetries) {
           const delay = calculateBackoffDelay(attempt, baseDelayMs);
-          console.log(`Retrying request to ${url} after ${Math.round(delay)}ms (attempt ${attempt + 1}/${maxRetries + 1}, status: ${response.status})`);
+          console.log(
+            `Retrying request to ${url} after ${Math.round(delay)}ms (attempt ${attempt + 1}/${maxRetries + 1}, status: ${response.status})`,
+          );
           await sleep(delay);
           continue;
         }
@@ -141,7 +149,9 @@ export async function fetchWithRetry(
       // Only retry on retryable errors
       if (isRetryableError(lastError) && attempt < maxRetries) {
         const delay = calculateBackoffDelay(attempt, baseDelayMs);
-        console.log(`Retrying request to ${url} after ${Math.round(delay)}ms (attempt ${attempt + 1}/${maxRetries + 1}, error: ${lastError.message})`);
+        console.log(
+          `Retrying request to ${url} after ${Math.round(delay)}ms (attempt ${attempt + 1}/${maxRetries + 1}, error: ${lastError.message})`,
+        );
         await sleep(delay);
         continue;
       }
@@ -191,7 +201,8 @@ export function generateTrackingHeaders(): TrackingHeaders {
 export function getCommonHeaders(cookies: string): Record<string, string> {
   return {
     accept: "*/*",
-    "accept-language": "sv-SE,sv;q=0.9,en-US;q=0.8,en-SE;q=0.7,en-GB;q=0.6,en;q=0.5",
+    "accept-language":
+      "sv-SE,sv;q=0.9,en-US;q=0.8,en-SE;q=0.7,en-GB;q=0.6,en;q=0.5",
     "cache-control": "no-cache",
     "content-type": "application/json",
     cookie: cookies,
@@ -210,7 +221,10 @@ export function getCommonHeaders(cookies: string): Record<string, string> {
 /**
  * Get full headers including tracking for API requests
  */
-export function getApiHeaders(cookies: string, csrfToken?: string): Record<string, string> {
+export function getApiHeaders(
+  cookies: string,
+  csrfToken?: string,
+): Record<string, string> {
   const tracking = generateTrackingHeaders();
   const headers: Record<string, string> = {
     ...getCommonHeaders(cookies),
@@ -228,11 +242,14 @@ export function getApiHeaders(cookies: string, csrfToken?: string): Record<strin
  * Fetch CSRF token from Willys API with retry logic
  */
 export async function fetchCsrfToken(cookies: string): Promise<string> {
-  const response = await fetchWithRetry("https://www.willys.se/axfood/rest/csrf-token", {
-    headers: getCommonHeaders(cookies),
-    timeout: 15000,
-    maxRetries: 2,
-  });
+  const response = await fetchWithRetry(
+    "https://www.willys.se/axfood/rest/csrf-token",
+    {
+      headers: getCommonHeaders(cookies),
+      timeout: 15000,
+      maxRetries: 2,
+    },
+  );
 
   if (!response.ok) {
     throw new Error(`Failed to get CSRF token: ${response.status}`);
@@ -275,5 +292,5 @@ export function truncateForLog(str: string, length: number = 20): string {
   if (str.length <= length) {
     return str;
   }
-  return str.substring(0, length) + "...";
+  return `${str.substring(0, length)}...`;
 }

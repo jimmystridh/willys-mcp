@@ -1,4 +1,4 @@
-import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
+import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 import {
   createMcpHandler,
   experimental_withMcpAuth as withMcpAuth,
@@ -27,7 +27,7 @@ const handler = createMcpHandler(
             },
           ],
         };
-      }
+      },
     );
   },
   // Server capabilities
@@ -46,7 +46,7 @@ const handler = createMcpHandler(
     sseMessageEndpoint: "/message",
     basePath: "/api/mcp",
     redisUrl: process.env.REDIS_URL,
-  }
+  },
 );
 
 /**
@@ -54,8 +54,8 @@ const handler = createMcpHandler(
  * In a real implementation, this would validate against your auth service
  */
 const verifyToken = async (
-  req: Request,
-  bearerToken?: string
+  _req: Request,
+  bearerToken?: string,
 ): Promise<AuthInfo | undefined> => {
   if (!bearerToken) return undefined;
 

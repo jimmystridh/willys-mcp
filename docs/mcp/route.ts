@@ -1,13 +1,13 @@
-import createMcpRouteHandler from '../dist/next/index';
+import createMcpRouteHandler from "../dist/next/index";
 
 const handler = createMcpRouteHandler(
-  server => {
-    server.tool('echo', 'Echo a message', {}, async () => {
+  (server) => {
+    server.tool("echo", "Echo a message", {}, async () => {
       return {
         content: [
           {
-            type: 'text',
-            text: 'Hello, world!',
+            type: "text",
+            text: "Hello, world!",
           },
         ],
       };
@@ -19,12 +19,12 @@ const handler = createMcpRouteHandler(
   },
   // Optional: Comes from the createMcpRouteHandler config
   {
-    streamableHttpEndpoint: '/mcp',
-    sseEndpoint: '/sse',
-    sseMessageEndpoint: '/message',
-    basePath: '/api/mcp',
+    streamableHttpEndpoint: "/mcp",
+    sseEndpoint: "/sse",
+    sseMessageEndpoint: "/message",
+    basePath: "/api/mcp",
     redisUrl: process.env.REDIS_URL,
-  }
+  },
 );
 
 export { handler as GET, handler as POST };

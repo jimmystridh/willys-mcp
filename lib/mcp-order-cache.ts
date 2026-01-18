@@ -3,7 +3,7 @@
  * Provides caching for Willys order details to improve performance
  */
 
-import { willysDatabase } from './database';
+import { willysDatabase } from "./database";
 
 export class OrderCache {
   /**
@@ -27,9 +27,19 @@ export class OrderCache {
    * @param orderDetails - The order details to cache
    * @param ttlMs - Time to live in milliseconds (default: 24 hours)
    */
-  setCachedOrder(orderNumber: string, sessionId: string, orderDetails: any, ttlMs?: number): void {
+  setCachedOrder(
+    orderNumber: string,
+    sessionId: string,
+    orderDetails: any,
+    ttlMs?: number,
+  ): void {
     try {
-      willysDatabase.setCachedOrder(orderNumber, sessionId, orderDetails, ttlMs);
+      willysDatabase.setCachedOrder(
+        orderNumber,
+        sessionId,
+        orderDetails,
+        ttlMs,
+      );
     } catch (error) {
       console.error(`Error caching order ${orderNumber}:`, error);
       // Don't throw error - caching failure shouldn't break the main functionality
@@ -55,7 +65,7 @@ export class OrderCache {
     try {
       willysDatabase.clearOrderCache();
     } catch (error) {
-      console.error('Error clearing all cached orders:', error);
+      console.error("Error clearing all cached orders:", error);
     }
   }
 
@@ -67,7 +77,10 @@ export class OrderCache {
     try {
       willysDatabase.clearOrderCacheBySession(sessionId);
     } catch (error) {
-      console.error(`Error clearing cached orders for session ${sessionId}:`, error);
+      console.error(
+        `Error clearing cached orders for session ${sessionId}:`,
+        error,
+      );
     }
   }
 
@@ -80,7 +93,7 @@ export class OrderCache {
       const stats = await willysDatabase.getStats();
       return { cachedOrders: stats.cachedOrders };
     } catch (error) {
-      console.error('Error getting cache statistics:', error);
+      console.error("Error getting cache statistics:", error);
       return { cachedOrders: 0 };
     }
   }
@@ -98,14 +111,24 @@ export class OrderCache {
    * Preload multiple orders into cache
    * @param orders - Array of objects with orderNumber, sessionId, and orderDetails
    */
-  preloadOrders(orders: Array<{ orderNumber: string; sessionId: string; orderDetails: any }>): void {
+  preloadOrders(
+    orders: Array<{
+      orderNumber: string;
+      sessionId: string;
+      orderDetails: any;
+    }>,
+  ): void {
     try {
       for (const order of orders) {
-        this.setCachedOrder(order.orderNumber, order.sessionId, order.orderDetails);
+        this.setCachedOrder(
+          order.orderNumber,
+          order.sessionId,
+          order.orderDetails,
+        );
       }
       console.log(`Preloaded ${orders.length} orders into cache`);
     } catch (error) {
-      console.error('Error preloading orders:', error);
+      console.error("Error preloading orders:", error);
     }
   }
 }

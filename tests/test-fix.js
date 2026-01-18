@@ -4,20 +4,18 @@
 const testData = {
   categoryOrderedDeliveredProducts: {
     "Bröd & Kakor": [
-      { name: "Pågen Hamburgerbröd", code: "123", manufacturer: "Pågen" }
+      { name: "Pågen Hamburgerbröd", code: "123", manufacturer: "Pågen" },
     ],
-    "Mejeri": [
-      { name: "Arla Mjölk", code: "456", manufacturer: "Arla" }  
-    ]
-  }
+    Mejeri: [{ name: "Arla Mjölk", code: "456", manufacturer: "Arla" }],
+  },
 };
 
-console.log('Testing categoryOrderedDeliveredProducts structure...');
+console.log("Testing categoryOrderedDeliveredProducts structure...");
 
 const categories = testData.categoryOrderedDeliveredProducts;
-if (categories && typeof categories === 'object') {
-  console.log('✅ Categories is an object');
-  
+if (categories && typeof categories === "object") {
+  console.log("✅ Categories is an object");
+
   for (const [categoryName, products] of Object.entries(categories)) {
     console.log(`Category: ${categoryName}`);
     if (Array.isArray(products)) {
@@ -26,11 +24,13 @@ if (categories && typeof categories === 'object') {
         console.log(`  - ${product.name} (${product.code})`);
       }
     } else {
-      console.log('❌ Products is not an array');
+      console.log("❌ Products is not an array");
     }
   }
 } else {
-  console.log('❌ Categories is not an object');
+  console.log("❌ Categories is not an object");
 }
 
-console.log('✅ Structure test completed - this should now work in the server action');
+console.log(
+  "✅ Structure test completed - this should now work in the server action",
+);

@@ -134,9 +134,9 @@ export default function SearchLab() {
     } else if (type === "hybrid" && result.score !== undefined) {
       return `${result.score.toFixed(1)} score (sim: ${((result.similarity || 0) * 100).toFixed(1)}%)`;
     } else if (type === "vector-boosted" && result.boostedScore !== undefined) {
-      return `${result.boostedScore.toFixed(1)} boosted (${(result.similarity! * 100).toFixed(1)}% + ${result.frequency || 0}×2)`;
+      return `${result.boostedScore.toFixed(1)} boosted (${((result.similarity ?? 0) * 100).toFixed(1)}% + ${result.frequency || 0}×2)`;
     } else if (type === "category-aware" && result.finalScore !== undefined) {
-      return `${result.finalScore.toFixed(2)} final (sim: ${(result.similarity! * 100).toFixed(1)}%${result.categoryBoost ? " + category" : ""})`;
+      return `${result.finalScore.toFixed(2)} final (sim: ${((result.similarity ?? 0) * 100).toFixed(1)}%${result.categoryBoost ? " + category" : ""})`;
     }
     return "N/A";
   };
@@ -159,10 +159,14 @@ export default function SearchLab() {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex flex-col md:flex-row gap-4 mb-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="search-query"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Search Query
               </label>
               <input
+                id="search-query"
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -173,10 +177,14 @@ export default function SearchLab() {
 
             {!compareMode && (
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="algorithm-select"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Algorithm
                 </label>
                 <select
+                  id="algorithm-select"
                   value={selectedAlgorithm}
                   onChange={(e) => setSelectedAlgorithm(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -194,6 +202,7 @@ export default function SearchLab() {
           <div className="flex flex-col sm:flex-row gap-2">
             {!compareMode && (
               <button
+                type="button"
                 onClick={() => search()}
                 disabled={loading || !query.trim()}
                 className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -203,6 +212,7 @@ export default function SearchLab() {
             )}
 
             <button
+              type="button"
               onClick={compareAll}
               disabled={loading || !query.trim()}
               className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -212,6 +222,7 @@ export default function SearchLab() {
 
             {compareMode && (
               <button
+                type="button"
                 onClick={() => {
                   setCompareMode(false);
                   setCompareResults({});
@@ -233,9 +244,10 @@ export default function SearchLab() {
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {algorithms.map((algo) => (
-                <div
+                <button
+                  type="button"
                   key={algo.id}
-                  className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                  className={`p-4 rounded-lg border-2 cursor-pointer transition-colors text-left ${
                     selectedAlgorithm === algo.id
                       ? "border-blue-500 bg-blue-50"
                       : "border-gray-200 hover:border-gray-300"
@@ -246,7 +258,7 @@ export default function SearchLab() {
                     {algo.name}
                   </h4>
                   <p className="text-sm text-gray-600">{algo.description}</p>
-                </div>
+                </button>
               ))}
             </div>
           </div>

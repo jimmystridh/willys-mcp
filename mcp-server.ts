@@ -12,28 +12,31 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-
-import { mcpAuthenticateWithWillys, mcpLogout, mcpIsAuthenticated } from "./lib/mcp-auth";
+import { willysDatabase } from "./lib/database";
 import {
-  mcpGetOrders,
-  mcpGetOrderDetails,
+  mcpAuthenticateWithWillys,
+  mcpIsAuthenticated,
+  mcpLogout,
+} from "./lib/mcp-auth";
+import {
   mcpAddToCart,
-  mcpRemoveFromCart,
   mcpCheckout,
-  mcpGetCustomerInfo,
   mcpGetCart,
-  mcpGetDeliverySlots,
-  mcpGetPickupSlots,
-  mcpSelectSlot,
-  mcpGetOffers,
-  mcpSearchProducts,
-  mcpGetSearchSuggestions,
   mcpGetCommonProducts,
+  mcpGetCustomerInfo,
+  mcpGetDeliverySlots,
+  mcpGetOffers,
+  mcpGetOrderDetails,
+  mcpGetOrders,
+  mcpGetPickupSlots,
   mcpGetProductDetail,
+  mcpGetSearchSuggestions,
   mcpGetSmartProductMatches,
+  mcpRemoveFromCart,
+  mcpSearchProducts,
+  mcpSelectSlot,
 } from "./lib/mcp-orders";
 import { mcpSessionStore } from "./lib/mcp-session-store";
-import { willysDatabase } from "./lib/database";
 
 const server = new Server(
   {
@@ -44,14 +47,15 @@ const server = new Server(
     capabilities: {
       tools: {},
     },
-  }
+  },
 );
 
 // Define all tools
 const tools = [
   {
     name: "mcp__willys_login",
-    description: "Login to Willys with username and password. Returns a sessionId that must be used in subsequent tool calls.",
+    description:
+      "Login to Willys with username and password. Returns a sessionId that must be used in subsequent tool calls.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -85,23 +89,34 @@ const tools = [
   },
   {
     name: "mcp__willys_get_orders",
-    description: "Get order history from Willys. Returns list of past orders with details.",
+    description:
+      "Get order history from Willys. Returns list of past orders with details.",
     inputSchema: {
       type: "object" as const,
       properties: {
-        sessionId: { type: "string", description: "Session ID for authentication" },
+        sessionId: {
+          type: "string",
+          description: "Session ID for authentication",
+        },
       },
       required: ["sessionId"],
     },
   },
   {
     name: "mcp__willys_get_order_details",
-    description: "Get detailed information about a specific order including all items.",
+    description:
+      "Get detailed information about a specific order including all items.",
     inputSchema: {
       type: "object" as const,
       properties: {
-        sessionId: { type: "string", description: "Session ID for authentication" },
-        orderId: { type: "string", description: "The order ID to get details for" },
+        sessionId: {
+          type: "string",
+          description: "Session ID for authentication",
+        },
+        orderId: {
+          type: "string",
+          description: "The order ID to get details for",
+        },
       },
       required: ["sessionId", "orderId"],
     },
@@ -112,7 +127,10 @@ const tools = [
     inputSchema: {
       type: "object" as const,
       properties: {
-        sessionId: { type: "string", description: "Session ID for authentication" },
+        sessionId: {
+          type: "string",
+          description: "Session ID for authentication",
+        },
       },
       required: ["sessionId"],
     },
@@ -123,9 +141,18 @@ const tools = [
     inputSchema: {
       type: "object" as const,
       properties: {
-        sessionId: { type: "string", description: "Session ID for authentication" },
-        productCode: { type: "string", description: "Product code (e.g., '101175556_ST')" },
-        quantity: { type: "number", description: "Quantity to add (default: 1)" },
+        sessionId: {
+          type: "string",
+          description: "Session ID for authentication",
+        },
+        productCode: {
+          type: "string",
+          description: "Product code (e.g., '101175556_ST')",
+        },
+        quantity: {
+          type: "number",
+          description: "Quantity to add (default: 1)",
+        },
       },
       required: ["sessionId", "productCode"],
     },
@@ -136,7 +163,10 @@ const tools = [
     inputSchema: {
       type: "object" as const,
       properties: {
-        sessionId: { type: "string", description: "Session ID for authentication" },
+        sessionId: {
+          type: "string",
+          description: "Session ID for authentication",
+        },
         productCode: { type: "string", description: "Product code to remove" },
       },
       required: ["sessionId", "productCode"],
@@ -148,7 +178,10 @@ const tools = [
     inputSchema: {
       type: "object" as const,
       properties: {
-        sessionId: { type: "string", description: "Session ID for authentication" },
+        sessionId: {
+          type: "string",
+          description: "Session ID for authentication",
+        },
       },
       required: ["sessionId"],
     },
@@ -159,7 +192,10 @@ const tools = [
     inputSchema: {
       type: "object" as const,
       properties: {
-        sessionId: { type: "string", description: "Session ID for authentication" },
+        sessionId: {
+          type: "string",
+          description: "Session ID for authentication",
+        },
       },
       required: ["sessionId"],
     },
@@ -170,8 +206,14 @@ const tools = [
     inputSchema: {
       type: "object" as const,
       properties: {
-        sessionId: { type: "string", description: "Session ID for authentication" },
-        postalCode: { type: "string", description: "Postal code for delivery (default: '12345')" },
+        sessionId: {
+          type: "string",
+          description: "Session ID for authentication",
+        },
+        postalCode: {
+          type: "string",
+          description: "Postal code for delivery (default: '12345')",
+        },
       },
       required: ["sessionId"],
     },
@@ -182,8 +224,14 @@ const tools = [
     inputSchema: {
       type: "object" as const,
       properties: {
-        sessionId: { type: "string", description: "Session ID for authentication" },
-        storeId: { type: "string", description: "Store ID for pickup (default: '2288')" },
+        sessionId: {
+          type: "string",
+          description: "Session ID for authentication",
+        },
+        storeId: {
+          type: "string",
+          description: "Store ID for pickup (default: '2288')",
+        },
       },
       required: ["sessionId"],
     },
@@ -194,9 +242,15 @@ const tools = [
     inputSchema: {
       type: "object" as const,
       properties: {
-        sessionId: { type: "string", description: "Session ID for authentication" },
+        sessionId: {
+          type: "string",
+          description: "Session ID for authentication",
+        },
         slotCode: { type: "string", description: "The slot code to select" },
-        isTmsSlot: { type: "boolean", description: "Whether this is a TMS slot (default: false)" },
+        isTmsSlot: {
+          type: "boolean",
+          description: "Whether this is a TMS slot (default: false)",
+        },
       },
       required: ["sessionId", "slotCode"],
     },
@@ -207,7 +261,10 @@ const tools = [
     inputSchema: {
       type: "object" as const,
       properties: {
-        sessionId: { type: "string", description: "Session ID for authentication" },
+        sessionId: {
+          type: "string",
+          description: "Session ID for authentication",
+        },
         query: { type: "string", description: "Search query" },
         page: { type: "number", description: "Page number (default: 0)" },
         size: { type: "number", description: "Results per page (default: 30)" },
@@ -221,7 +278,10 @@ const tools = [
     inputSchema: {
       type: "object" as const,
       properties: {
-        sessionId: { type: "string", description: "Session ID for authentication" },
+        sessionId: {
+          type: "string",
+          description: "Session ID for authentication",
+        },
         query: { type: "string", description: "Partial search query" },
       },
       required: ["sessionId", "query"],
@@ -233,18 +293,25 @@ const tools = [
     inputSchema: {
       type: "object" as const,
       properties: {
-        sessionId: { type: "string", description: "Session ID for authentication" },
+        sessionId: {
+          type: "string",
+          description: "Session ID for authentication",
+        },
       },
       required: ["sessionId"],
     },
   },
   {
     name: "mcp__willys_get_common_products",
-    description: "Get personalized product recommendations based on purchase history",
+    description:
+      "Get personalized product recommendations based on purchase history",
     inputSchema: {
       type: "object" as const,
       properties: {
-        sessionId: { type: "string", description: "Session ID for authentication" },
+        sessionId: {
+          type: "string",
+          description: "Session ID for authentication",
+        },
       },
       required: ["sessionId"],
     },
@@ -255,20 +322,30 @@ const tools = [
     inputSchema: {
       type: "object" as const,
       properties: {
-        sessionId: { type: "string", description: "Session ID for authentication" },
+        sessionId: {
+          type: "string",
+          description: "Session ID for authentication",
+        },
         productCode: { type: "string", description: "Product code" },
-        productName: { type: "string", description: "Product name (optional, for URL construction)" },
+        productName: {
+          type: "string",
+          description: "Product name (optional, for URL construction)",
+        },
       },
       required: ["sessionId", "productCode"],
     },
   },
   {
     name: "mcp__willys_get_smart_product_matches",
-    description: "AI-powered product matching using purchase history and semantic search",
+    description:
+      "AI-powered product matching using purchase history and semantic search",
     inputSchema: {
       type: "object" as const,
       properties: {
-        sessionId: { type: "string", description: "Session ID for authentication" },
+        sessionId: {
+          type: "string",
+          description: "Session ID for authentication",
+        },
         searchTerm: { type: "string", description: "Product to search for" },
         limit: { type: "number", description: "Maximum results (default: 5)" },
       },
@@ -289,17 +366,33 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     switch (name) {
       case "mcp__willys_login": {
-        const { username, password } = args as { username: string; password: string };
+        const { username, password } = args as {
+          username: string;
+          password: string;
+        };
         const sessionId = mcpSessionStore.generateSessionId();
-        const result = await mcpAuthenticateWithWillys(sessionId, { username, password });
+        const result = await mcpAuthenticateWithWillys(sessionId, {
+          username,
+          password,
+        });
 
         if (result.success) {
           return {
-            content: [{ type: "text", text: `✅ Successfully logged in. Session ID: ${sessionId}\n\nUse this sessionId in all subsequent tool calls.` }],
+            content: [
+              {
+                type: "text",
+                text: `✅ Successfully logged in. Session ID: ${sessionId}\n\nUse this sessionId in all subsequent tool calls.`,
+              },
+            ],
           };
         }
         return {
-          content: [{ type: "text", text: `❌ Login failed: ${result.error || "Invalid credentials"}` }],
+          content: [
+            {
+              type: "text",
+              text: `❌ Login failed: ${result.error || "Invalid credentials"}`,
+            },
+          ],
         };
       }
 
@@ -315,7 +408,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const { sessionId } = args as { sessionId: string };
         const isAuth = await mcpIsAuthenticated(sessionId);
         return {
-          content: [{ type: "text", text: isAuth ? "✅ Authenticated" : "❌ Not authenticated" }],
+          content: [
+            {
+              type: "text",
+              text: isAuth ? "✅ Authenticated" : "❌ Not authenticated",
+            },
+          ],
         };
       }
 
@@ -323,18 +421,31 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const { sessionId } = args as { sessionId: string };
         const orders = await mcpGetOrders(sessionId);
         return {
-          content: [{ type: "text", text: `✅ Found ${orders.length} orders:\n${JSON.stringify(orders, null, 2)}` }],
+          content: [
+            {
+              type: "text",
+              text: `✅ Found ${orders.length} orders:\n${JSON.stringify(orders, null, 2)}`,
+            },
+          ],
         };
       }
 
       case "mcp__willys_get_order_details": {
-        const { sessionId, orderId } = args as { sessionId: string; orderId: string };
+        const { sessionId, orderId } = args as {
+          sessionId: string;
+          orderId: string;
+        };
         const order = await mcpGetOrderDetails(sessionId, orderId);
         if (!order) {
           return { content: [{ type: "text", text: `❌ Order not found` }] };
         }
         return {
-          content: [{ type: "text", text: `✅ Order details:\n${JSON.stringify(order, null, 2)}` }],
+          content: [
+            {
+              type: "text",
+              text: `✅ Order details:\n${JSON.stringify(order, null, 2)}`,
+            },
+          ],
         };
       }
 
@@ -342,26 +453,58 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const { sessionId } = args as { sessionId: string };
         const cart = await mcpGetCart(sessionId);
         if (!cart) {
-          return { content: [{ type: "text", text: `❌ Failed to fetch cart` }] };
+          return {
+            content: [{ type: "text", text: `❌ Failed to fetch cart` }],
+          };
         }
         return {
-          content: [{ type: "text", text: `✅ Cart (${cart.totalItems} items, ${cart.totalPrice}):\n${JSON.stringify(cart, null, 2)}` }],
+          content: [
+            {
+              type: "text",
+              text: `✅ Cart (${cart.totalItems} items, ${cart.totalPrice}):\n${JSON.stringify(cart, null, 2)}`,
+            },
+          ],
         };
       }
 
       case "mcp__willys_add_to_cart": {
-        const { sessionId, productCode, quantity = 1 } = args as { sessionId: string; productCode: string; quantity?: number };
+        const {
+          sessionId,
+          productCode,
+          quantity = 1,
+        } = args as {
+          sessionId: string;
+          productCode: string;
+          quantity?: number;
+        };
         const result = await mcpAddToCart(sessionId, productCode, quantity);
         return {
-          content: [{ type: "text", text: result.success ? `✅ Added to cart` : `❌ ${result.message}` }],
+          content: [
+            {
+              type: "text",
+              text: result.success
+                ? `✅ Added to cart`
+                : `❌ ${result.message}`,
+            },
+          ],
         };
       }
 
       case "mcp__willys_remove_from_cart": {
-        const { sessionId, productCode } = args as { sessionId: string; productCode: string };
+        const { sessionId, productCode } = args as {
+          sessionId: string;
+          productCode: string;
+        };
         const result = await mcpRemoveFromCart(sessionId, productCode);
         return {
-          content: [{ type: "text", text: result.success ? `✅ Removed from cart` : `❌ ${result.message}` }],
+          content: [
+            {
+              type: "text",
+              text: result.success
+                ? `✅ Removed from cart`
+                : `❌ ${result.message}`,
+            },
+          ],
         };
       }
 
@@ -369,7 +512,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const { sessionId } = args as { sessionId: string };
         const result = await mcpCheckout(sessionId);
         return {
-          content: [{ type: "text", text: result.success ? `✅ Checkout initiated` : `❌ ${result.message}` }],
+          content: [
+            {
+              type: "text",
+              text: result.success
+                ? `✅ Checkout initiated`
+                : `❌ ${result.message}`,
+            },
+          ],
         };
       }
 
@@ -377,62 +527,129 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const { sessionId } = args as { sessionId: string };
         const customer = await mcpGetCustomerInfo(sessionId);
         if (!customer) {
-          return { content: [{ type: "text", text: `❌ Failed to get customer info` }] };
+          return {
+            content: [{ type: "text", text: `❌ Failed to get customer info` }],
+          };
         }
         return {
-          content: [{ type: "text", text: `✅ Customer info:\n${JSON.stringify(customer, null, 2)}` }],
+          content: [
+            {
+              type: "text",
+              text: `✅ Customer info:\n${JSON.stringify(customer, null, 2)}`,
+            },
+          ],
         };
       }
 
       case "mcp__willys_get_delivery_slots": {
-        const { sessionId, postalCode = "12345" } = args as { sessionId: string; postalCode?: string };
+        const { sessionId, postalCode = "12345" } = args as {
+          sessionId: string;
+          postalCode?: string;
+        };
         const slots = await mcpGetDeliverySlots(sessionId, postalCode);
         if (!slots) {
-          return { content: [{ type: "text", text: `❌ Failed to get delivery slots` }] };
+          return {
+            content: [
+              { type: "text", text: `❌ Failed to get delivery slots` },
+            ],
+          };
         }
         return {
-          content: [{ type: "text", text: `✅ Delivery slots:\n${JSON.stringify(slots, null, 2)}` }],
+          content: [
+            {
+              type: "text",
+              text: `✅ Delivery slots:\n${JSON.stringify(slots, null, 2)}`,
+            },
+          ],
         };
       }
 
       case "mcp__willys_get_pickup_slots": {
-        const { sessionId, storeId = "2288" } = args as { sessionId: string; storeId?: string };
+        const { sessionId, storeId = "2288" } = args as {
+          sessionId: string;
+          storeId?: string;
+        };
         const slots = await mcpGetPickupSlots(sessionId, storeId);
         if (!slots) {
-          return { content: [{ type: "text", text: `❌ Failed to get pickup slots` }] };
+          return {
+            content: [{ type: "text", text: `❌ Failed to get pickup slots` }],
+          };
         }
         return {
-          content: [{ type: "text", text: `✅ Pickup slots:\n${JSON.stringify(slots, null, 2)}` }],
+          content: [
+            {
+              type: "text",
+              text: `✅ Pickup slots:\n${JSON.stringify(slots, null, 2)}`,
+            },
+          ],
         };
       }
 
       case "mcp__willys_select_slot": {
-        const { sessionId, slotCode, isTmsSlot = false } = args as { sessionId: string; slotCode: string; isTmsSlot?: boolean };
+        const {
+          sessionId,
+          slotCode,
+          isTmsSlot = false,
+        } = args as {
+          sessionId: string;
+          slotCode: string;
+          isTmsSlot?: boolean;
+        };
         const result = await mcpSelectSlot(sessionId, slotCode, isTmsSlot);
         return {
-          content: [{ type: "text", text: result.success ? `✅ Slot selected` : `❌ ${result.message}` }],
+          content: [
+            {
+              type: "text",
+              text: result.success
+                ? `✅ Slot selected`
+                : `❌ ${result.message}`,
+            },
+          ],
         };
       }
 
       case "mcp__willys_search": {
-        const { sessionId, query, page = 0, size = 30 } = args as { sessionId: string; query: string; page?: number; size?: number };
+        const {
+          sessionId,
+          query,
+          page = 0,
+          size = 30,
+        } = args as {
+          sessionId: string;
+          query: string;
+          page?: number;
+          size?: number;
+        };
         const result = await mcpSearchProducts(sessionId, query, page, size);
         if (!result.success) {
           return { content: [{ type: "text", text: `❌ ${result.message}` }] };
         }
         return {
-          content: [{ type: "text", text: `✅ Search results for "${query}":\n${JSON.stringify(result.products, null, 2)}` }],
+          content: [
+            {
+              type: "text",
+              text: `✅ Search results for "${query}":\n${JSON.stringify(result.products, null, 2)}`,
+            },
+          ],
         };
       }
 
       case "mcp__willys_search_suggestions": {
-        const { sessionId, query } = args as { sessionId: string; query: string };
+        const { sessionId, query } = args as {
+          sessionId: string;
+          query: string;
+        };
         const result = await mcpGetSearchSuggestions(sessionId, query);
         if (!result.success) {
           return { content: [{ type: "text", text: `❌ ${result.message}` }] };
         }
         return {
-          content: [{ type: "text", text: `✅ Suggestions:\n${JSON.stringify(result.suggestions, null, 2)}` }],
+          content: [
+            {
+              type: "text",
+              text: `✅ Suggestions:\n${JSON.stringify(result.suggestions, null, 2)}`,
+            },
+          ],
         };
       }
 
@@ -443,7 +660,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           return { content: [{ type: "text", text: `❌ ${result.message}` }] };
         }
         return {
-          content: [{ type: "text", text: `✅ Offers:\n${JSON.stringify(result.offers, null, 2)}` }],
+          content: [
+            {
+              type: "text",
+              text: `✅ Offers:\n${JSON.stringify(result.offers, null, 2)}`,
+            },
+          ],
         };
       }
 
@@ -454,32 +676,67 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           return { content: [{ type: "text", text: `❌ ${result.message}` }] };
         }
         return {
-          content: [{ type: "text", text: `✅ Common products:\n${JSON.stringify(result.commonProducts, null, 2)}` }],
+          content: [
+            {
+              type: "text",
+              text: `✅ Common products:\n${JSON.stringify(result.commonProducts, null, 2)}`,
+            },
+          ],
         };
       }
 
       case "mcp__willys_get_product_detail": {
-        const { sessionId, productCode, productName } = args as { sessionId: string; productCode: string; productName?: string };
-        const result = await mcpGetProductDetail(sessionId, productCode, productName);
+        const { sessionId, productCode, productName } = args as {
+          sessionId: string;
+          productCode: string;
+          productName?: string;
+        };
+        const result = await mcpGetProductDetail(
+          sessionId,
+          productCode,
+          productName,
+        );
         if (!result.success) {
           return { content: [{ type: "text", text: `❌ ${result.message}` }] };
         }
         return {
-          content: [{ type: "text", text: `✅ Product detail:\n${JSON.stringify(result.productDetail, null, 2)}` }],
+          content: [
+            {
+              type: "text",
+              text: `✅ Product detail:\n${JSON.stringify(result.productDetail, null, 2)}`,
+            },
+          ],
         };
       }
 
       case "mcp__willys_get_smart_product_matches": {
-        const { sessionId, searchTerm, limit = 5 } = args as { sessionId: string; searchTerm: string; limit?: number };
-        const result = await mcpGetSmartProductMatches(sessionId, searchTerm, limit);
+        const {
+          sessionId,
+          searchTerm,
+          limit = 5,
+        } = args as { sessionId: string; searchTerm: string; limit?: number };
+        const result = await mcpGetSmartProductMatches(
+          sessionId,
+          searchTerm,
+          limit,
+        );
         if (!result.success) {
           return { content: [{ type: "text", text: `❌ ${result.message}` }] };
         }
         const matches = result.matches || [];
         let text = `✅ Smart matches for "${searchTerm}":\n\n`;
-        matches.forEach((match: { product: { name: string; code: string; price?: string }; score: number; frequency: number }, i: number) => {
-          text += `${i + 1}. ${match.product.name} (${match.product.code}) - Score: ${match.score}, Freq: ${match.frequency}\n`;
-        });
+        matches.forEach(
+          (
+            match: {
+              product: { name: string; code: string; price?: string };
+              score: number;
+              frequency: number;
+            },
+            i: number,
+          ) => {
+            text += `${i + 1}. ${match.product.name} (${match.product.code}) - Score: ${match.score}, Freq: ${match.frequency}\n`;
+          },
+        );
         return { content: [{ type: "text", text }] };
       }
 
@@ -491,7 +748,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   } catch (error) {
     return {
-      content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : "Unknown error"}` }],
+      content: [
+        {
+          type: "text",
+          text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+        },
+      ],
       isError: true,
     };
   }

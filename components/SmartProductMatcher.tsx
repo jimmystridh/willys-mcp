@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { getSmartProductMatches } from '@/actions/orders';
-import type { WillysSmartMatchResponse } from '@/lib/types';
+import { useState } from "react";
+import { getSmartProductMatches } from "@/actions/orders";
+import type { WillysSmartMatchResponse } from "@/lib/types";
 
 export default function SmartProductMatcher() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [maxResults, setMaxResults] = useState(5);
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<WillysSmartMatchResponse | null>(null);
@@ -20,21 +20,21 @@ export default function SmartProductMatcher() {
 
     try {
       const data = await getSmartProductMatches(searchTerm.trim(), maxResults);
-      
+
       if (!data.success) {
-        throw new Error(data.message || 'Failed to search');
+        throw new Error(data.message || "Failed to search");
       }
 
       setResults(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearch();
     }
   };
@@ -42,12 +42,14 @@ export default function SmartProductMatcher() {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Smart Product Matcher</h2>
+        <h2 className="text-lg font-semibold text-gray-900">
+          Smart Product Matcher
+        </h2>
         <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
           Based on your purchase history
         </div>
       </div>
-      
+
       <div className="space-y-4">
         <div className="flex space-x-4">
           <div className="flex-1">
@@ -72,11 +74,12 @@ export default function SmartProductMatcher() {
             </select>
           </div>
           <button
+            type="button"
             onClick={handleSearch}
             disabled={isLoading || !searchTerm.trim()}
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Searching...' : 'Find'}
+            {isLoading ? "Searching..." : "Find"}
           </button>
         </div>
 
@@ -98,9 +101,9 @@ export default function SmartProductMatcher() {
                   <div
                     key={match.product.code}
                     className={`p-4 rounded-lg border-2 ${
-                      index === 0 
-                        ? 'border-green-300 bg-green-50' 
-                        : 'border-gray-200 bg-gray-50'
+                      index === 0
+                        ? "border-green-300 bg-green-50"
+                        : "border-gray-200 bg-gray-50"
                     }`}
                   >
                     <div className="flex justify-between items-start">
@@ -141,8 +144,10 @@ export default function SmartProductMatcher() {
         )}
 
         <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
-          <strong>How it works:</strong> Searches your purchase history and ranks products by frequency, recency, and consistency. 
-          Recent purchases (within 60 days) get bonus points. Falls back to regular search if no history matches.
+          <strong>How it works:</strong> Searches your purchase history and
+          ranks products by frequency, recency, and consistency. Recent
+          purchases (within 60 days) get bonus points. Falls back to regular
+          search if no history matches.
         </div>
       </div>
     </div>
