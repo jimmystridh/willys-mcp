@@ -1,13 +1,34 @@
 import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
-import { mcpAuthenticateWithWillys, mcpLogout, mcpIsAuthenticated } from "@/lib/mcp-auth";
-import { mcpGetOrders, mcpGetOrderDetails, mcpAddToCart, mcpRemoveFromCart, mcpCheckout, mcpGetCustomerInfo, mcpGetCart, mcpGetDeliverySlots, mcpGetPickupSlots, mcpSelectSlot, mcpGetOffers, mcpSearchProducts, mcpGetSearchSuggestions, mcpGetCommonProducts, mcpGetProductDetail, mcpGetSmartProductMatches } from "@/lib/mcp-orders";
+import {
+  mcpAuthenticateWithWillys,
+  mcpIsAuthenticated,
+  mcpLogout,
+} from "@/lib/mcp-auth";
+import {
+  mcpAddToCart,
+  mcpCheckout,
+  mcpGetCart,
+  mcpGetCommonProducts,
+  mcpGetCustomerInfo,
+  mcpGetDeliverySlots,
+  mcpGetOffers,
+  mcpGetOrderDetails,
+  mcpGetOrders,
+  mcpGetPickupSlots,
+  mcpGetProductDetail,
+  mcpGetSearchSuggestions,
+  mcpGetSmartProductMatches,
+  mcpRemoveFromCart,
+  mcpSearchProducts,
+  mcpSelectSlot,
+} from "@/lib/mcp-orders";
 import { mcpSessionStore } from "@/lib/mcp-session-store";
 
 /**
  * MCP Server for Willys Grocery Operations
  * Provides tools for managing orders, cart, and delivery slots with session-based authentication
- * 
+ *
  * Authentication Flow:
  * 1. Call mcp__willys_login with credentials to get a sessionId
  * 2. Use the sessionId in subsequent tool calls for authentication
@@ -26,8 +47,11 @@ const handler = createMcpHandler(
       async ({ username, password }) => {
         try {
           const sessionId = mcpSessionStore.generateSessionId();
-          const result = await mcpAuthenticateWithWillys(sessionId, { username, password });
-          
+          const result = await mcpAuthenticateWithWillys(sessionId, {
+            username,
+            password,
+          });
+
           if (result.success) {
             return {
               content: [
@@ -57,7 +81,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     server.tool(
@@ -87,7 +111,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     server.tool(
@@ -103,8 +127,8 @@ const handler = createMcpHandler(
             content: [
               {
                 type: "text",
-                text: authenticated 
-                  ? "✅ Currently authenticated with Willys" 
+                text: authenticated
+                  ? "✅ Currently authenticated with Willys"
                   : "❌ Not authenticated with Willys",
               },
             ],
@@ -119,7 +143,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     // Order Management Tools
@@ -145,7 +169,7 @@ const handler = createMcpHandler(
           }
 
           const orders = await mcpGetOrders(sessionId);
-          
+
           if (orders.length === 0) {
             return {
               content: [
@@ -157,9 +181,12 @@ const handler = createMcpHandler(
             };
           }
 
-          const ordersList = orders.map(order => 
-            `• Order #${order.orderNumber} - ${order.deliveryDate} - ${order.status} - ${order.total} kr`
-          ).join("\n");
+          const ordersList = orders
+            .map(
+              (order) =>
+                `• Order #${order.orderNumber} - ${order.deliveryDate} - ${order.status} - ${order.total} kr`,
+            )
+            .join("\n");
 
           return {
             content: [
@@ -179,7 +206,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     server.tool(
@@ -205,7 +232,7 @@ const handler = createMcpHandler(
           }
 
           const order = await mcpGetOrderDetails(sessionId, orderNumber);
-          
+
           if (!order) {
             return {
               content: [
@@ -217,19 +244,24 @@ const handler = createMcpHandler(
             };
           }
 
-          const itemsList = order.items?.map(item => 
-            `• ${item.name} - Qty: ${item.quantity} - ${item.price} kr - ${item.brand || 'No brand'} - ${item.category || 'No category'}`
-          ).join("\n") || "No items found";
+          const itemsList =
+            order.items
+              ?.map(
+                (item) =>
+                  `• ${item.name} - Qty: ${item.quantity} - ${item.price} kr - ${item.brand || "No brand"} - ${item.category || "No category"}`,
+              )
+              .join("\n") || "No items found";
 
           return {
             content: [
               {
                 type: "text",
-                text: `📋 Order #${order.orderNumber} Details:\n` +
-                      `📅 Delivery: ${order.deliveryDate || "Date not available"}\n` +
-                      `📊 Status: ${order.status}\n` +
-                      `💰 Total: ${order.total} kr\n` +
-                      `📦 Items (${order.items?.length || 0}):\n\n${itemsList}`,
+                text:
+                  `📋 Order #${order.orderNumber} Details:\n` +
+                  `📅 Delivery: ${order.deliveryDate || "Date not available"}\n` +
+                  `📊 Status: ${order.status}\n` +
+                  `💰 Total: ${order.total} kr\n` +
+                  `📦 Items (${order.items?.length || 0}):\n\n${itemsList}`,
               },
             ],
           };
@@ -243,7 +275,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     server.tool(
@@ -251,8 +283,15 @@ const handler = createMcpHandler(
       "Add a product to the Willys cart by product code using session-based authentication.",
       {
         sessionId: z.string().describe("Session ID from login"),
-        productCode: z.string().describe("The Willys product code (e.g., '101280149_ST')"),
-        quantity: z.number().int().min(1).default(1).describe("Quantity to add to cart (default: 1)"),
+        productCode: z
+          .string()
+          .describe("The Willys product code (e.g., '101280149_ST')"),
+        quantity: z
+          .number()
+          .int()
+          .min(1)
+          .default(1)
+          .describe("Quantity to add to cart (default: 1)"),
       },
       async ({ sessionId, productCode, quantity = 1 }) => {
         try {
@@ -270,7 +309,7 @@ const handler = createMcpHandler(
           }
 
           const result = await mcpAddToCart(sessionId, productCode, quantity);
-          
+
           if (result.success) {
             return {
               content: [
@@ -300,7 +339,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     // Customer Information Tools
@@ -326,7 +365,7 @@ const handler = createMcpHandler(
           }
 
           const customerInfo = await mcpGetCustomerInfo(sessionId);
-          
+
           if (!customerInfo) {
             return {
               content: [
@@ -342,15 +381,16 @@ const handler = createMcpHandler(
             content: [
               {
                 type: "text",
-                text: `👤 Customer Information:\n` +
-                      `📛 Name: ${customerInfo.name}\n` +
-                      `📧 Email: ${customerInfo.email}\n` +
-                      `🆔 Display ID: ${customerInfo.displayUid}\n` +
-                      `💰 This Month's Savings: ${customerInfo.bonusInfo.totalDiscountCurrentMonth}\n` +
-                      `💰 This Year's Savings: ${customerInfo.bonusInfo.totalDiscountCurrentYear}\n` +
-                      `🏆 Bonus Tier: ${customerInfo.bonusInfo.currentTierName}\n` +
-                      `🏠 Default Address: ${customerInfo.defaultShippingAddress?.formattedAddress || "Not set"}\n` +
-                      `📅 Member Since: ${customerInfo.memberCreationMonthAndYear}`,
+                text:
+                  `👤 Customer Information:\n` +
+                  `📛 Name: ${customerInfo.name}\n` +
+                  `📧 Email: ${customerInfo.email}\n` +
+                  `🆔 Display ID: ${customerInfo.displayUid}\n` +
+                  `💰 This Month's Savings: ${customerInfo.bonusInfo.totalDiscountCurrentMonth}\n` +
+                  `💰 This Year's Savings: ${customerInfo.bonusInfo.totalDiscountCurrentYear}\n` +
+                  `🏆 Bonus Tier: ${customerInfo.bonusInfo.currentTierName}\n` +
+                  `🏠 Default Address: ${customerInfo.defaultShippingAddress?.formattedAddress || "Not set"}\n` +
+                  `📅 Member Since: ${customerInfo.memberCreationMonthAndYear}`,
               },
             ],
           };
@@ -364,7 +404,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     server.tool(
@@ -389,7 +429,7 @@ const handler = createMcpHandler(
           }
 
           const offers = await mcpGetOffers(sessionId);
-          
+
           if (!offers.success) {
             return {
               content: [
@@ -405,9 +445,10 @@ const handler = createMcpHandler(
             content: [
               {
                 type: "text",
-                text: `🏷️ Willys Offers Retrieved Successfully!\n\n` +
-                      `📊 Data Structure: ${JSON.stringify(offers.offers, null, 2).substring(0, 1000)}...` +
-                      `\n\n✅ Use this data to parse and display current offers and promotions.`,
+                text:
+                  `🏷️ Willys Offers Retrieved Successfully!\n\n` +
+                  `📊 Data Structure: ${JSON.stringify(offers.offers, null, 2).substring(0, 1000)}...` +
+                  `\n\n✅ Use this data to parse and display current offers and promotions.`,
               },
             ],
           };
@@ -421,7 +462,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     server.tool(
@@ -446,7 +487,7 @@ const handler = createMcpHandler(
           }
 
           const cart = await mcpGetCart(sessionId);
-          
+
           if (!cart) {
             return {
               content: [
@@ -469,20 +510,24 @@ const handler = createMcpHandler(
             };
           }
 
-          const productsList = cart.products.map(product => 
-            `• ${product.name} - ${product.manufacturer} - Qty: ${product.pickQuantity} - ${product.totalDiscountedPrice}`
-          ).join("\n");
+          const productsList = cart.products
+            .map(
+              (product) =>
+                `• ${product.name} - ${product.manufacturer} - Qty: ${product.pickQuantity} - ${product.totalDiscountedPrice}`,
+            )
+            .join("\n");
 
           return {
             content: [
               {
                 type: "text",
-                text: `🛒 Cart Contents (${cart.totalItems} items):\n\n${productsList}\n\n` +
-                      `💰 Subtotal: ${cart.subTotalPrice}\n` +
-                      `🚚 Delivery: ${cart.deliveryCost || "0,00 kr"}\n` +
-                      `🏷️ Tax: ${cart.totalTax}\n` +
-                      `💳 Total: ${cart.totalPrice}\n` +
-                      `📅 Order Date: ${cart.orderDate}`,
+                text:
+                  `🛒 Cart Contents (${cart.totalItems} items):\n\n${productsList}\n\n` +
+                  `💰 Subtotal: ${cart.subTotalPrice}\n` +
+                  `🚚 Delivery: ${cart.deliveryCost || "0,00 kr"}\n` +
+                  `🏷️ Tax: ${cart.totalTax}\n` +
+                  `💳 Total: ${cart.totalPrice}\n` +
+                  `📅 Order Date: ${cart.orderDate}`,
               },
             ],
           };
@@ -496,7 +541,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     // Delivery and Pickup Tools
@@ -523,7 +568,7 @@ const handler = createMcpHandler(
           }
 
           const slotsData = await mcpGetDeliverySlots(sessionId, postalCode);
-          
+
           if (!slotsData || slotsData.deliveryDays.length === 0) {
             return {
               content: [
@@ -535,16 +580,25 @@ const handler = createMcpHandler(
             };
           }
 
-          const slotsText = slotsData.deliveryDays.map(day => {
-            const availableSlots = day.slots.filter(slot => slot.available && !slot.fullyBooked && !slot.limitReached);
-            if (availableSlots.length === 0) return `📅 ${day.formattedDate}: No available slots`;
-            
-            const slotsList = availableSlots.map(slot => 
-              `  • ${slot.formattedTime} - ${slot.totalCost} (ID: ${slot.slotId})`
-            ).join("\n");
-            
-            return `📅 ${day.formattedDate}:\n${slotsList}`;
-          }).join("\n\n");
+          const slotsText = slotsData.deliveryDays
+            .map((day) => {
+              const availableSlots = day.slots.filter(
+                (slot) =>
+                  slot.available && !slot.fullyBooked && !slot.limitReached,
+              );
+              if (availableSlots.length === 0)
+                return `📅 ${day.formattedDate}: No available slots`;
+
+              const slotsList = availableSlots
+                .map(
+                  (slot) =>
+                    `  • ${slot.formattedTime} - ${slot.totalCost} (ID: ${slot.slotId})`,
+                )
+                .join("\n");
+
+              return `📅 ${day.formattedDate}:\n${slotsList}`;
+            })
+            .join("\n\n");
 
           return {
             content: [
@@ -564,7 +618,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     server.tool(
@@ -572,7 +626,10 @@ const handler = createMcpHandler(
       "Get available store pickup time slots using session-based authentication.",
       {
         sessionId: z.string().describe("Session ID from login"),
-        storeId: z.string().default("2288").describe("Store ID for pickup (default: '2288')"),
+        storeId: z
+          .string()
+          .default("2288")
+          .describe("Store ID for pickup (default: '2288')"),
       },
       async ({ sessionId, storeId = "2288" }) => {
         try {
@@ -590,7 +647,7 @@ const handler = createMcpHandler(
           }
 
           const slotsData = await mcpGetPickupSlots(sessionId, storeId);
-          
+
           if (!slotsData || slotsData.slots.length === 0) {
             return {
               content: [
@@ -602,7 +659,9 @@ const handler = createMcpHandler(
             };
           }
 
-          const availableSlots = slotsData.slots.filter(slot => slot.available);
+          const availableSlots = slotsData.slots.filter(
+            (slot) => slot.available,
+          );
           if (availableSlots.length === 0) {
             return {
               content: [
@@ -614,9 +673,12 @@ const handler = createMcpHandler(
             };
           }
 
-          const slotsList = availableSlots.map(slot => 
-            `• ${slot.formattedTime} - ${slot.totalCost.formattedValue} (Code: ${slot.code})`
-          ).join("\n");
+          const slotsList = availableSlots
+            .map(
+              (slot) =>
+                `• ${slot.formattedTime} - ${slot.totalCost.formattedValue} (Code: ${slot.code})`,
+            )
+            .join("\n");
 
           return {
             content: [
@@ -636,7 +698,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     server.tool(
@@ -644,8 +706,17 @@ const handler = createMcpHandler(
       "Book a specific delivery or pickup time slot using session-based authentication and TMS data for delivery slots.",
       {
         sessionId: z.string().describe("Session ID from login"),
-        slotCode: z.string().describe("The slot code/ID to book (e.g., '2288_Collect_250901_1200_1330_53257734482927')"),
-        isTmsSlot: z.boolean().default(false).describe("Whether this is a TMS delivery slot (true) or pickup slot (false)"),
+        slotCode: z
+          .string()
+          .describe(
+            "The slot code/ID to book (e.g., '2288_Collect_250901_1200_1330_53257734482927')",
+          ),
+        isTmsSlot: z
+          .boolean()
+          .default(false)
+          .describe(
+            "Whether this is a TMS delivery slot (true) or pickup slot (false)",
+          ),
       },
       async ({ sessionId, slotCode, isTmsSlot = false }) => {
         try {
@@ -664,7 +735,7 @@ const handler = createMcpHandler(
 
           // For TMS slots, we would need additional TMS data, but we'll attempt with the basic call
           const result = await mcpSelectSlot(sessionId, slotCode, isTmsSlot);
-          
+
           if (result.success) {
             const slotType = isTmsSlot ? "delivery" : "pickup";
             return {
@@ -695,7 +766,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     // Remove product from cart
@@ -704,7 +775,9 @@ const handler = createMcpHandler(
       "Remove a product from the Willys cart by setting quantity to 0 using session-based authentication.",
       {
         sessionId: z.string().describe("Session ID from login"),
-        productCode: z.string().describe("The Willys product code to remove (e.g., '101280149_ST')"),
+        productCode: z
+          .string()
+          .describe("The Willys product code to remove (e.g., '101280149_ST')"),
       },
       async ({ sessionId, productCode }) => {
         try {
@@ -722,7 +795,7 @@ const handler = createMcpHandler(
           }
 
           const result = await mcpRemoveFromCart(sessionId, productCode);
-          
+
           if (result.success) {
             return {
               content: [
@@ -752,7 +825,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     // Checkout
@@ -778,13 +851,13 @@ const handler = createMcpHandler(
           }
 
           const result = await mcpCheckout(sessionId);
-          
+
           if (result.success) {
             return {
               content: [
                 {
                   type: "text",
-                  text: result.emptyCart 
+                  text: result.emptyCart
                     ? "⚠️ Cart is empty - nothing to checkout"
                     : "✅ Checkout process initiated successfully!",
                 },
@@ -810,7 +883,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     // Search Tools
@@ -819,9 +892,22 @@ const handler = createMcpHandler(
       "Search for products on Willys using session-based authentication. Returns clean JSON product data.",
       {
         sessionId: z.string().describe("Session ID from login"),
-        query: z.string().describe("Search query (e.g., 'mjölk', 'bröd', 'äpplen')"),
-        page: z.number().int().min(0).default(0).describe("Page number (0-based, default: 0)"),
-        size: z.number().int().min(1).max(100).default(30).describe("Number of results per page (default: 30)"),
+        query: z
+          .string()
+          .describe("Search query (e.g., 'mjölk', 'bröd', 'äpplen')"),
+        page: z
+          .number()
+          .int()
+          .min(0)
+          .default(0)
+          .describe("Page number (0-based, default: 0)"),
+        size: z
+          .number()
+          .int()
+          .min(1)
+          .max(100)
+          .default(30)
+          .describe("Number of results per page (default: 30)"),
       },
       async ({ sessionId, query, page = 0, size = 30 }) => {
         try {
@@ -839,7 +925,7 @@ const handler = createMcpHandler(
           }
 
           const result = await mcpSearchProducts(sessionId, query, page, size);
-          
+
           if (!result.success) {
             return {
               content: [
@@ -851,23 +937,40 @@ const handler = createMcpHandler(
             };
           }
 
+          interface SearchProduct {
+            name: string;
+            code: string;
+            price: string;
+            manufacturer?: string;
+            categoryName?: string;
+            stock?: { stockLevelStatus?: string };
+            volume?: string;
+          }
+
           return {
             content: [
               {
                 type: "text",
-                text: `🔍 Search Results for "${query}" (page ${page + 1}):\n\n` +
-                      `Found ${result.totalResults || 0} products:\n\n` +
-                      (result.products?.slice(0, 5).map((product: any, index: number) => 
+                text:
+                  `🔍 Search Results for "${query}" (page ${page + 1}):\n\n` +
+                  `Found ${result.totalResults || 0} products:\n\n` +
+                  ((result.products as SearchProduct[] | undefined)
+                    ?.slice(0, 5)
+                    .map(
+                      (product, index) =>
                         `${index + 1}. **${product.name}**\n` +
                         `   Code: ${product.code}\n` +
                         `   Price: ${product.price}\n` +
-                        `   Brand: ${product.manufacturer || 'Unknown'}\n` +
-                        `   Category: ${product.categoryName || 'Unknown'}\n` +
-                        `   Stock: ${product.stock?.stockLevelStatus || 'unknown'}\n` +
-                        `   Volume: ${product.volume || 'N/A'}`
-                      ).join('\n\n') || 'No products found') +
-                      ((result.products?.length ?? 0) > 5 ? `\n\n... and ${(result.products?.length ?? 0) - 5} more products` : '') +
-                      `\n\n📊 Products returned as clean JSON structure with: name, code, price, manufacturer, categoryName, stock, image, volume, etc.`,
+                        `   Brand: ${product.manufacturer || "Unknown"}\n` +
+                        `   Category: ${product.categoryName || "Unknown"}\n` +
+                        `   Stock: ${product.stock?.stockLevelStatus || "unknown"}\n` +
+                        `   Volume: ${product.volume || "N/A"}`,
+                    )
+                    .join("\n\n") || "No products found") +
+                  ((result.products?.length ?? 0) > 5
+                    ? `\n\n... and ${(result.products?.length ?? 0) - 5} more products`
+                    : "") +
+                  `\n\n📊 Products returned as clean JSON structure with: name, code, price, manufacturer, categoryName, stock, image, volume, etc.`,
               },
             ],
           };
@@ -881,7 +984,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     server.tool(
@@ -889,7 +992,11 @@ const handler = createMcpHandler(
       "Get search suggestions/autocomplete for a search term using session-based authentication.",
       {
         sessionId: z.string().describe("Session ID from login"),
-        term: z.string().describe("Search term to get suggestions for (e.g., 'mjö' for 'mjölk')"),
+        term: z
+          .string()
+          .describe(
+            "Search term to get suggestions for (e.g., 'mjö' for 'mjölk')",
+          ),
       },
       async ({ sessionId, term }) => {
         try {
@@ -907,7 +1014,7 @@ const handler = createMcpHandler(
           }
 
           const result = await mcpGetSearchSuggestions(sessionId, term);
-          
+
           if (!result.success) {
             return {
               content: [
@@ -923,9 +1030,10 @@ const handler = createMcpHandler(
             content: [
               {
                 type: "text",
-                text: `💡 Search Suggestions for "${term}":\n\n` +
-                      `📊 Suggestions Data: ${JSON.stringify(result.suggestions, null, 2)}\n\n` +
-                      `✅ Use these suggestions to help users find relevant products.`,
+                text:
+                  `💡 Search Suggestions for "${term}":\n\n` +
+                  `📊 Suggestions Data: ${JSON.stringify(result.suggestions, null, 2)}\n\n` +
+                  `✅ Use these suggestions to help users find relevant products.`,
               },
             ],
           };
@@ -939,7 +1047,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     server.tool(
@@ -964,7 +1072,7 @@ const handler = createMcpHandler(
           }
 
           const result = await mcpGetCommonProducts(sessionId);
-          
+
           if (!result.success) {
             return {
               content: [
@@ -980,10 +1088,11 @@ const handler = createMcpHandler(
             content: [
               {
                 type: "text",
-                text: `📦 Your Most Common Products Retrieved Successfully!\n\n` +
-                      `📊 Page Data: ${JSON.stringify(result.commonProducts, null, 2).substring(0, 1000)}...` +
-                      `\n\n✅ This contains personalized product recommendations based on your purchase history.\n` +
-                      `💡 Parse the contentSlots data to extract product recommendations and personalized offers.`,
+                text:
+                  `📦 Your Most Common Products Retrieved Successfully!\n\n` +
+                  `📊 Page Data: ${JSON.stringify(result.commonProducts, null, 2).substring(0, 1000)}...` +
+                  `\n\n✅ This contains personalized product recommendations based on your purchase history.\n` +
+                  `💡 Parse the contentSlots data to extract product recommendations and personalized offers.`,
               },
             ],
           };
@@ -997,7 +1106,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     // Get product detail
@@ -1006,8 +1115,15 @@ const handler = createMcpHandler(
       "Get detailed information about a specific product including price, description, and availability using session-based authentication.",
       {
         sessionId: z.string().describe("Session ID from login"),
-        productCode: z.string().describe("The Willys product code (e.g., '101245382_ST')"),
-        productName: z.string().optional().describe("Optional product name for URL (will be generated if not provided)"),
+        productCode: z
+          .string()
+          .describe("The Willys product code (e.g., '101245382_ST')"),
+        productName: z
+          .string()
+          .optional()
+          .describe(
+            "Optional product name for URL (will be generated if not provided)",
+          ),
       },
       async ({ sessionId, productCode, productName }) => {
         try {
@@ -1023,9 +1139,13 @@ const handler = createMcpHandler(
               ],
             };
           }
-          
-          const result = await mcpGetProductDetail(sessionId, productCode, productName);
-          
+
+          const result = await mcpGetProductDetail(
+            sessionId,
+            productCode,
+            productName,
+          );
+
           if (!result.success) {
             return {
               content: [
@@ -1041,16 +1161,21 @@ const handler = createMcpHandler(
           let responseText = `✅ Successfully retrieved product detail for ${productCode}\n\n`;
 
           // Add summary of the response
-          if (productDetail && typeof productDetail === 'object' && 'pageProps' in productDetail) {
+          if (
+            productDetail &&
+            typeof productDetail === "object" &&
+            "pageProps" in productDetail
+          ) {
             responseText += `📄 Product detail page data received\n`;
             responseText += `📊 Response structure: ${JSON.stringify(productDetail, null, 2).substring(0, 1000)}`;
             if (JSON.stringify(productDetail, null, 2).length > 1000) {
-              responseText += "\n\n... (response truncated, full data available in productDetail object)";
+              responseText +=
+                "\n\n... (response truncated, full data available in productDetail object)";
             }
           } else {
             responseText += `📦 Product detail data: ${JSON.stringify(productDetail, null, 2)}`;
           }
-          
+
           return {
             content: [
               {
@@ -1069,7 +1194,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
 
     // Get smart product matches based on purchase history
@@ -1078,8 +1203,16 @@ const handler = createMcpHandler(
       "Get intelligently ranked product matches for a search term based on purchase history, frequency, and recency using session-based authentication.",
       {
         sessionId: z.string().describe("Session ID from login"),
-        searchTerm: z.string().describe("Search term to find products (e.g., 'mjölk', 'bröd', 'äpplen')"),
-        maxResults: z.number().optional().default(5).describe("Maximum number of results to return (default: 5)"),
+        searchTerm: z
+          .string()
+          .describe(
+            "Search term to find products (e.g., 'mjölk', 'bröd', 'äpplen')",
+          ),
+        maxResults: z
+          .number()
+          .optional()
+          .default(5)
+          .describe("Maximum number of results to return (default: 5)"),
       },
       async ({ sessionId, searchTerm, maxResults = 5 }) => {
         try {
@@ -1095,9 +1228,13 @@ const handler = createMcpHandler(
               ],
             };
           }
-          
-          const result = await mcpGetSmartProductMatches(sessionId, searchTerm, maxResults);
-          
+
+          const result = await mcpGetSmartProductMatches(
+            sessionId,
+            searchTerm,
+            maxResults,
+          );
+
           if (!result.success) {
             return {
               content: [
@@ -1109,30 +1246,43 @@ const handler = createMcpHandler(
             };
           }
 
-          const matches = result.matches || [];
+          interface ProductMatch {
+            product: {
+              name: string;
+              code: string;
+              price?: string;
+            };
+            score: number;
+            frequency: number;
+            recentPurchases: number;
+            lastPurchased: string;
+          }
+
+          const matches = (result.matches || []) as ProductMatch[];
           let responseText = `✅ Smart matches for "${searchTerm}":\n\n`;
-          
+
           if (matches.length === 0) {
             responseText += "No matches found for your search term.";
           } else {
-            matches.forEach((match: any, index: number) => {
+            matches.forEach((match, index) => {
               const product = match.product;
-              const scoreInfo = match.score > 0 
-                ? `(Score: ${match.score.toFixed(1)}, Freq: ${match.frequency}, Recent: ${match.recentPurchases}, Last: ${match.lastPurchased})`
-                : `(Search result)`;
-              
+              const scoreInfo =
+                match.score > 0
+                  ? `(Score: ${match.score.toFixed(1)}, Freq: ${match.frequency}, Recent: ${match.recentPurchases}, Last: ${match.lastPurchased})`
+                  : `(Search result)`;
+
               responseText += `${index + 1}. **${product.name}**\n`;
               responseText += `   Code: ${product.code}\n`;
-              responseText += `   Price: ${product.price || 'N/A'}\n`;
+              responseText += `   Price: ${product.price || "N/A"}\n`;
               responseText += `   ${scoreInfo}\n\n`;
             });
-            
+
             if (result.totalHistoryMatches && result.totalHistoryMatches > 0) {
               responseText += `📊 Found ${result.totalHistoryMatches} products in your purchase history matching "${searchTerm}"\n`;
               responseText += `🎯 Top match: **${matches[0].product.name}** (most likely choice based on your buying patterns)\n`;
             }
           }
-          
+
           return {
             content: [
               {
@@ -1151,7 +1301,7 @@ const handler = createMcpHandler(
             ],
           };
         }
-      }
+      },
     );
   },
   // Server capabilities
@@ -1165,7 +1315,7 @@ const handler = createMcpHandler(
     basePath: "/api/mcp",
     maxDuration: 60,
     verboseLogs: true,
-  }
+  },
 );
 
 export { handler as GET, handler as POST };
